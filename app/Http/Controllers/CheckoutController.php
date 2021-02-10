@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Transaction;
-use App\TransactionDetail;
-use App\TravelPackage;
+use App\Models\Transaction;
+use App\Models\TransactionDetail;
+use App\Models\TravelPackage;
 
 use Carbon\Carbon;
 
@@ -24,24 +24,26 @@ class CheckoutController extends Controller
 
     public function process(Request $request, $id)
     {
-        $travel_package = TravelPackage::finOrFail($id);
+        $travel_package = TravelPackage::findOrFail($id);
+
         $transaction = Transaction::create([
-        'travel_packages_id' => $id,
-        'users_id' => Auth::user()->id,
-        'additional_visa' => 0,
-        'transaction_total' => $travel_package->price,
-        'transaction_status' => 'IN_CART'
-        ]);
+
+            'travel_packages_id' => $id,
+            'users_id' => Auth::user()->id,
+            'additional_visa' => 0,
+            'transaction_total' => $travel_package->price,
+            'transaction_status' => 'IN_CART'
+            ]);
 
         TransactionDetail::create([
-        'transactions_id' => $transaction->id,
-        'username' => Auth::user()->username,
-        'nationality' => ID,
-        'is_visa' => false,
-        'doe_passport' => Carbon::now()->addYears(5)
-        ]);
+            'transaction_id' => $transaction->id,
+            'username' => Auth::user()->username,
+            'nationality' => 'ID',
+            'is_visa' => false,
+            'doe_passport' => Carbon::now()->addYears(5)
+            ]);
 
-        return redirect()->rote('checkout', '$transaction->id');
+        return redirect()->route('checkout', $transaction->id);
     }
 
     public function remove(Request $request, $detail_id)
@@ -62,7 +64,7 @@ class CheckoutController extends Controller
             $transaction->travel_package->price;
 
         $transaction->save();
-        $item-delete();
+        $item->delete();
 
         return redirect()->route('checkout', $item->transaction_id);
     }
@@ -103,7 +105,7 @@ class CheckoutController extends Controller
         $transaction = Transaction::findOrFail($id);
         $transaction->transaction_status = 'PENDING';
 
-        $transaction-save();
+        $transaction->save();
         return view('pages.success');
     }
 }
